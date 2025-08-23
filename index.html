@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Banów Championów</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-radius: 0px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-bg);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .settings-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+        
+        .settings-toggle:hover {
+            background: white;
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: var(--card-radius);
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .search-box button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #5a67d8;
+        }
+
+        .add-ban-form {
+            display: flex;
+            gap: 10px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+
+        .add-ban-form select,
+        .add-ban-form input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            min-width: 150px;
+        }
+
+        .add-ban-form button {
+            padding: 10px 20px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .add-ban-form button:hover {
+            background: #38a169;
+        }
+
+        .refresh-btn {
+            background: #667eea !important;
+        }
+
+        .refresh-btn:hover {
+            background: #5a67d8 !important;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .player-card {
+            background: white;
+            border-radius: var(--card-radius);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .player-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .player-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            object-fit: cover;
+        }
+        
+        .player-avatar-fallback {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .champion-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .champion-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f7fafc;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .champion-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .champion-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            object-fit: cover;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .champion-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .champion-avatar-placeholder {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .champion-item:hover {
+            background: #edf2f7;
+        }
+
+        .champion-item.highlight {
+            background: #fef5e7;
+            border: 1px solid #f39c12;
+            animation: pulse 1s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .remove-btn {
+            background: #f56565;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .remove-btn:hover {
+            background: #e53e3e;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            padding: 40px;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f56565;
+        }
+
+        .success-message {
+            background: #c6f6d5;
+            color: #276749;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .no-bans {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .search-results {
+            background: #fef5e7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 2px solid #f39c12;
+        }
+
+        .search-results h3 {
+            color: #7d4f39;
+            margin-bottom: 10px;
+        }
+
+        .search-results ul {
+            list-style: none;
+        }
+
+        .search-results li {
+            padding: 5px 0;
+            color: #5d4037;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-result-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            object-fit: cover;
+        }
+        
+        .search-result-avatar-placeholder {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        .config-notice {
+            background: #bee3f8;
+            color: #2c5282;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3182ce;
+        }
+
+        .style-controls {
+            background: white;
+            padding: 20px;
+            border-radius: var(--card-radius);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .style-controls.show {
+            display: block;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .style-controls h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .style-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .color-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .preset-colors {
+            display: flex;
+            gap: 10px;
+        }
+
+        .preset-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .preset-btn:hover {
+            border-color: #667eea;
+        }
+
+        .preset-btn.active {
+            border-color: #667eea;
+            border-width: 3px;
+        }
+
+        .shape-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .shape-btn {
+            padding: 8px 12px;
+            background: #f7fafc;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .shape-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .champion-autocomplete {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .champion-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .champion-dropdown.show {
+            display: block;
+        }
+        
+        .champion-option {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        
+        .champion-option:hover,
+        .champion-option.highlighted {
+            background: #f0f0f0;
+        }
+        
+        .champion-option:last-child {
+            border-bottom: none;
+        }
+        
+        .champion-option-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
+        
+        .champion-option-placeholder {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .add-ban-form {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .players-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="settings-toggle" onclick="toggleSettings()" title="Ustawienia wyglądu">
+            ⚙️
+        </button>
+        
+        <h1>System Banów Championów</h1>
+        
+        <div id="configNotice" class="config-notice">
+            <strong>Uwaga:</strong> Pamiętaj o skonfigurowaniu URL API w zmiennej API_URL na końcu pliku!
+        </div>
+        
+        <div id="styleControls" class="style-controls">
+            <h3>🎨 Ustawienia wyglądu</h3>
+            <div class="style-options">
+                <div class="color-option">
+                    <label>Kolor tła:</label>
+                    <input type="color" id="bgColor1" class="color-picker" value="#667eea" title="Kolor początkowy gradientu">
+                </div>
+                <div class="color-option">
+                    <label>Kolor końcowy:</label>
+                    <input type="color" id="bgColor2" class="color-picker" value="#764ba2" title="Kolor końcowy gradientu">
+                </div>
+                <div class="preset-colors">
+                    <div class="preset-btn active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="setPreset('#667eea', '#764ba2', this)" title="Domyślny"></div>
+                    <div class="preset-btn" style="background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);" onclick="setPreset('#ff7e5f', '#feb47b', this)" title="Pomarańczowy"></div>
+                    <div class="preset-btn" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" onclick="setPreset('#43e97b', '#38f9d7', this)" title="Zielony"></div>
+                    <div class="preset-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" onclick="setPreset('#fa709a', '#fee140', this)" title="Różowo-żółty"></div>
+                    <div class="preset-btn" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="setPreset('#a8edea', '#fed6e3', this)" title="Pastelowy"></div>
+                    <div class="preset-btn" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);" onclick="setPreset('#2c3e50', '#34495e', this)" title="Ciemny"></div>
+                </div>
+                <div class="shape-controls">
+                    <label>Kształt:</label>
+                    <button class="shape-btn active" onclick="setShape('0px', this)">Prostokątne</button>
+                    <button class="shape-btn" onclick="setShape('10px', this)">Zaokrąglone</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Wyszukaj championa (np. Lux)...">
+                <button onclick="searchChampion()">Szukaj</button>
+                <button onclick="clearSearch()">Wyczyść</button>
+            </div>
+            
+            <div id="searchResults" class="search-results" style="display: none;">
+                <h3>Wyniki wyszukiwania:</h3>
+                <ul id="searchResultsList"></ul>
+            </div>
+            
+            <div class="add-ban-form">
+                <select id="playerSelect">
+                    <option value="">Wybierz gracza...</option>
+                </select>
+                <div class="champion-autocomplete">
+                    <input type="text" id="championInput" placeholder="Nazwa championa..." autocomplete="off">
+                    <div id="championDropdown" class="champion-dropdown"></div>
+                </div>
+                <button onclick="addBan()">Dodaj bana</button>
+                <button onclick="refreshData()" class="refresh-btn">Odśwież dane</button>
+            </div>
+        </div>
+        
+        <div id="messageArea"></div>
+        
+        <div id="loadingIndicator" class="loading">Ładowanie danych...</div>
+        
+        <div id="playersContainer" class="players-grid" style="display: none;"></div>
+    </div>
+
+    <script>
+        // TUTAJ WKLEJ URL SWOJEGO WEB APP Z GOOGLE APPS SCRIPT
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyCTVY3EdNUKJiGMnUOU3-g7fruSjc1FTbs11D4Rr93uQpym1mRpdQxXOju1VwrbUzi/exec';
+        
+        let bansData = {};
+        
+        // Pobierz dane przy ładowaniu strony
+        window.onload = function() {
+            loadData();
+            loadSavedStyles();
+        };
+        
+        // Obsługa klawisza Enter w polach wyszukiwania
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchChampion();
+                }
+            });
+            
+            // Live search - wyszukuje automatycznie podczas pisania
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const searchTerm = this.value.trim();
+                    if (searchTerm) {
+                        searchChampion();
+                    } else {
+                        clearSearch();
+                    }
+                }, 300);
+            });
+            
+            document.getElementById('championInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addBan();
+                }
+            });
+        });
+        
+        function loadData() {
+            try {
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('playersContainer').style.display = 'none';
+                
+                // Użyj JSONP zamiast fetch dla uniknięcia CORS
+                const script = document.createElement('script');
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                
+                // Globalna funkcja callback
+                window[callbackName] = function(result) {
+                    try {
+                        if (result.status === 'success') {
+                            bansData = result.data;
+                            displayPlayers();
+                            updatePlayerSelect();
+                            hideConfigNotice();
+                        } else {
+                            showError('Błąd pobierania danych: ' + (result.message || 'Nieznany błąd'));
+                        }
+                    } catch (error) {
+                        showError('Błąd przetwarzania danych: ' + error.message);
+                    } finally {
+                        document.getElementById('loadingIndicator').style.display = 'none';
+                        document.getElementById('playersContainer').style.display = 'grid';
+                        // Cleanup
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                    }
+                };
+                
+                script.src = API_URL + '?callback=' + callbackName;
+                script.onerror = function() {
+                    showError('Błąd połączenia. Sprawdź konfigurację API_URL.');
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('playersContainer').style.display = 'grid';
+                    delete window[callbackName];
+                };
+                
+                document.head.appendChild(script);
+            } catch (error) {
+                showError('Błąd ładowania: ' + error.message);
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('playersContainer').style.display = 'grid';
+            }
+        }
+        
+        function hideConfigNotice() {
+            const notice = document.getElementById('configNotice');
+            if (notice) {
+                notice.style.display = 'none';
+            }
+        }
+        
+        function displayPlayers() {
+            const container = document.getElementById('playersContainer');
+            container.innerHTML = '';
+            
+            for (const [player, bans] of Object.entries(bansData)) {
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.setAttribute('data-player', player);
+                
+                const playerName = document.createElement('div');
+                playerName.className = 'player-name';
+                
+                const playerAvatar = document.createElement('img');
+                playerAvatar.className = 'player-avatar';
+                playerAvatar.src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(player)}`;
+                playerAvatar.alt = player;
+                playerAvatar.onerror = function() {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'player-avatar-fallback';
+                    fallback.textContent = player.charAt(0).toUpperCase();
+                    fallback.title = player;
+                    this.parentNode.replaceChild(fallback, this);
+                };
+                
+                const playerNameText = document.createElement('span');
+                playerNameText.textContent = player;
+                
+                playerName.appendChild(playerAvatar);
+                playerName.appendChild(playerNameText);
+                
+                const championList = document.createElement('div');
+                championList.className = 'champion-list';
+                
+                if (bans.length === 0) {
+                    championList.innerHTML = '<div class="no-bans">Brak banów</div>';
+                } else {
+                    bans.forEach(champion => {
+                        const item = document.createElement('div');
+                        item.className = 'champion-item';
+                        item.setAttribute('data-champion', champion);
+                        
+                        const championContent = document.createElement('div');
+                        championContent.className = 'champion-content';
+                        
+                        const championAvatar = document.createElement('img');
+                        championAvatar.className = 'champion-avatar';
+                        championAvatar.src = `https://am-a.akamaihd.net/image?f=https://ddragon.leagueoflegends.com/cdn/15.9.1/img/champion/${champion}.png`;
+                        championAvatar.alt = champion;
+                        championAvatar.onerror = function() {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'champion-avatar-placeholder';
+                            placeholder.textContent = champion.charAt(0).toUpperCase();
+                            placeholder.title = champion;
+                            this.parentNode.replaceChild(placeholder, this);
+                        };
+                        
+                        const championName = document.createElement('span');
+                        championName.textContent = champion;
+                        
+                        championContent.appendChild(championAvatar);
+                        championContent.appendChild(championName);
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-btn';
+                        removeBtn.textContent = 'Usuń';
+                        removeBtn.onclick = () => removeBan(player, champion);
+                        
+                        item.appendChild(championContent);
+                        item.appendChild(removeBtn);
+                        championList.appendChild(item);
+                    });
+                }
+                
+                card.appendChild(playerName);
+                card.appendChild(championList);
+                container.appendChild(card);
+            }
+        }
+        
+        function updatePlayerSelect() {
+            const select = document.getElementById('playerSelect');
+            select.innerHTML = '<option value="">Wybierz gracza...</option>';
+            
+            for (const player of Object.keys(bansData)) {
+                const option = document.createElement('option');
+                option.value = player;
+                option.textContent = player;
+                select.appendChild(option);
+            }
+        }
+        
+        async function addBan() {
+            const player = document.getElementById('playerSelect').value;
+            const champion = document.getElementById('championInput').value.trim();
+            
+            if (!player || !champion) {
+                showError('Wybierz gracza i wpisz nazwę championa');
+                return;
+            }
+            
+            // Sprawdź czy ban już istnieje
+            if (bansData[player] && bansData[player].includes(champion)) {
+                showError('Ten ban już istnieje!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addBan',
+                        player: player,
+                        champion: champion
+                    })
+                });
+                
+                // Ze względu na CORS, nie możemy odczytać odpowiedzi
+                // Zakładamy sukces i odświeżamy dane
+                showSuccess(`Ban "${champion}" dodany dla gracza ${player}`);
+                document.getElementById('championInput').value = '';
+                setTimeout(() => loadData(), 500);
+            } catch (error) {
+                showError('Błąd dodawania bana: ' + error.message);
+            }
+        }
+        
+        async function removeBan(player, champion) {
+            if (!confirm(`Czy na pewno usunąć bana "${champion}" dla gracza ${player}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'removeBan',
+                        player: player,
+                        champion: champion
+                    })
+                });
+                
+                showSuccess(`Ban "${champion}" usunięty dla gracza ${player}`);
+                setTimeout(() => loadData(), 500);
+            } catch (error) {
+                showError('Błąd usuwania bana: ' + error.message);
+            }
+        }
+        
+        function searchChampion() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                clearSearch();
+                return;
+            }
+            
+            // Wyczyść poprzednie podświetlenia
+            document.querySelectorAll('.champion-item').forEach(item => {
+                item.classList.remove('highlight');
+            });
+            
+            // Znajdź graczy z tym banem
+            const playersWithBan = [];
+            for (const [player, bans] of Object.entries(bansData)) {
+                const foundBans = bans.filter(ban => 
+                    ban.toLowerCase().includes(searchTerm)
+                );
+                if (foundBans.length > 0) {
+                    playersWithBan.push({player, bans: foundBans});
+                    
+                    // Podświetl znalezione elementy
+                    const playerCard = document.querySelector(`[data-player="${player}"]`);
+                    if (playerCard) {
+                        foundBans.forEach(ban => {
+                            const items = playerCard.querySelectorAll(`[data-champion="${ban}"]`);
+                            items.forEach(item => item.classList.add('highlight'));
+                        });
+                    }
+                }
+            }
+            
+            // Wyświetl wyniki
+            const resultsDiv = document.getElementById('searchResults');
+            const resultsList = document.getElementById('searchResultsList');
+            
+            if (playersWithBan.length > 0) {
+                resultsList.innerHTML = '';
+                playersWithBan.forEach(({player, bans}) => {
+                    const li = document.createElement('li');
+                    
+                    const playerAvatar = document.createElement('img');
+                    playerAvatar.className = 'search-result-avatar';
+                    playerAvatar.src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(player)}`;
+                    playerAvatar.alt = player;
+                    playerAvatar.onerror = function() {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'search-result-avatar-placeholder';
+                        placeholder.textContent = player.charAt(0).toUpperCase();
+                        placeholder.title = player;
+                        this.parentNode.replaceChild(placeholder, this);
+                    };
+                    
+                    const textContent = document.createElement('span');
+                    textContent.innerHTML = `<strong>${player}</strong>: ${bans.join(', ')}`;
+                    
+                    li.appendChild(playerAvatar);
+                    li.appendChild(textContent);
+                    resultsList.appendChild(li);
+                });
+                resultsDiv.style.display = 'block';
+            } else {
+                resultsList.innerHTML = '<li>Nie znaleziono żadnych banów dla tego championa</li>';
+                resultsDiv.style.display = 'block';
+            }
+        }
+        
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+            document.querySelectorAll('.champion-item').forEach(item => {
+                item.classList.remove('highlight');
+            });
+        }
+        
+        function refreshData() {
+            clearSearch();
+            loadData();
+            showSuccess('Dane odświeżone');
+        }
+        
+        function showError(message) {
+            showMessage(message, 'error');
+        }
+        
+        function showSuccess(message) {
+            showMessage(message, 'success');
+        }
+        
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            
+            messageArea.innerHTML = '';
+            messageArea.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 4000);
+        }
+        
+        // Funkcje do customizacji wyglądu
+        function updateBackground() {
+            const color1 = document.getElementById('bgColor1').value;
+            const color2 = document.getElementById('bgColor2').value;
+            const gradient = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+            document.documentElement.style.setProperty('--primary-bg', gradient);
+            
+            // Zapisz w localStorage
+            localStorage.setItem('bgColor1', color1);
+            localStorage.setItem('bgColor2', color2);
+        }
+        
+        function setPreset(color1, color2, element) {
+            document.getElementById('bgColor1').value = color1;
+            document.getElementById('bgColor2').value = color2;
+            updateBackground();
+            
+            // Ustaw aktywny preset
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+        }
+        
+        function setShape(radius, element) {
+            document.documentElement.style.setProperty('--card-radius', radius);
+            localStorage.setItem('cardRadius', radius);
+            
+            // Ustaw aktywny kształt
+            document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+        }
+        
+        function toggleSettings() {
+            const styleControls = document.getElementById('styleControls');
+            const isVisible = styleControls.classList.contains('show');
+            
+            if (isVisible) {
+                styleControls.classList.remove('show');
+                setTimeout(() => {
+                    styleControls.style.display = 'none';
+                }, 300);
+            } else {
+                styleControls.style.display = 'block';
+                setTimeout(() => {
+                    styleControls.classList.add('show');
+                }, 10);
+            }
+        }
+        
+        function loadSavedStyles() {
+            // Wczytaj zapisane kolory
+            const savedColor1 = localStorage.getItem('bgColor1');
+            const savedColor2 = localStorage.getItem('bgColor2');
+            const savedRadius = localStorage.getItem('cardRadius');
+            
+            if (savedColor1) document.getElementById('bgColor1').value = savedColor1;
+            if (savedColor2) document.getElementById('bgColor2').value = savedColor2;
+            if (savedRadius) document.documentElement.style.setProperty('--card-radius', savedRadius);
+            
+            if (savedColor1 || savedColor2) {
+                updateBackground();
+            }
+            
+            // Ustaw aktywny kształt
+            if (savedRadius === '10px') {
+                document.querySelector('.shape-btn:nth-child(3)').classList.add('active');
+                document.querySelector('.shape-btn:nth-child(2)').classList.remove('active');
+            }
+        }
+        
+        // Lista championów League of Legends
+        const champions = [
+            'Aatrox', 'Ahri', 'Akali', 'Akshan', 'Alistar', 'Amumu', 'Anivia', 'Annie', 'Aphelios', 'Ashe',
+            'AurelionSol', 'Azir', 'Bard', 'Belveth', 'Blitzcrank', 'Brand', 'Braum', 'Caitlyn', 'Camille', 'Cassiopeia',
+            'Chogath', 'Corki', 'Darius', 'Diana', 'Draven', 'DrMundo', 'Ekko', 'Elise', 'Evelynn', 'Ezreal',
+            'Fiddlesticks', 'Fiora', 'Fizz', 'Galio', 'Gangplank', 'Garen', 'Gnar', 'Gragas', 'Graves', 'Gwen',
+            'Hecarim', 'Heimerdinger', 'Illaoi', 'Irelia', 'Ivern', 'Janna', 'JarvanIV', 'Jax', 'Jayce', 'Jhin',
+            'Jinx', 'Kaisa', 'Kalista', 'Karma', 'Karthus', 'Kassadin', 'Katarina', 'Kayle', 'Kayn', 'Kennen',
+            'Khazix', 'Kindred', 'Kled', 'KogMaw', 'Leblanc', 'LeeSin', 'Leona', 'Lillia', 'Lissandra', 'Lucian',
+            'Lulu', 'Lux', 'Malphite', 'Malzahar', 'Maokai', 'MasterYi', 'MissFortune', 'Mordekaiser', 'Morgana', 'Nami',
+            'Nasus', 'Nautilus', 'Neeko', 'Nidalee', 'Nocturne', 'Nunu', 'Olaf', 'Orianna', 'Ornn', 'Pantheon',
+            'Poppy', 'Pyke', 'Qiyana', 'Quinn', 'Rakan', 'Rammus', 'RekSai', 'Rell', 'Renata', 'Renekton',
+            'Rengar', 'Riven', 'Rumble', 'Ryze', 'Samira', 'Sejuani', 'Senna', 'Seraphine', 'Sett', 'Shaco',
+            'Shen', 'Shyvana', 'Singed', 'Sion', 'Sivir', 'Skarner', 'Sona', 'Soraka', 'Swain', 'Sylas',
+            'Syndra', 'TahmKench', 'Taliyah', 'Talon', 'Taric', 'Teemo', 'Thresh', 'Tristana', 'Trundle', 'Tryndamere',
+            'TwistedFate', 'Twitch', 'Udyr', 'Urgot', 'Varus', 'Vayne', 'Veigar', 'Velkoz', 'Vex', 'Vi',
+            'Viego', 'Viktor', 'Vladimir', 'Volibear', 'Warwick', 'Wukong', 'Xayah', 'Xerath', 'XinZhao', 'Yasuo',
+            'Yone', 'Yorick', 'Yuumi', 'Zac', 'Zed', 'Zeri', 'Ziggs', 'Zilean', 'Zoe', 'Zyra'
+        ];
+        
+        let highlightedIndex = -1;
+        let filteredChampions = [];
+        
+        function showChampionDropdown(inputValue) {
+            const dropdown = document.getElementById('championDropdown');
+            
+            if (!inputValue.trim()) {
+                dropdown.classList.remove('show');
+                return;
+            }
+            
+            // Filtruj championów
+            filteredChampions = champions.filter(champion => 
+                champion.toLowerCase().includes(inputValue.toLowerCase())
+            ).slice(0, 8); // Pokaż maksymalnie 8 wyników
+            
+            if (filteredChampions.length === 0) {
+                dropdown.classList.remove('show');
+                return;
+            }
+            
+            // Wygeneruj opcje
+            dropdown.innerHTML = '';
+            filteredChampions.forEach((champion, index) => {
+                const option = document.createElement('div');
+                option.className = 'champion-option';
+                option.setAttribute('data-champion', champion);
+                
+                const avatar = document.createElement('img');
+                avatar.className = 'champion-option-avatar';
+                avatar.src = `https://am-a.akamaihd.net/image?f=https://ddragon.leagueoflegends.com/cdn/15.9.1/img/champion/${champion}.png`;
+                avatar.alt = champion;
+                avatar.onerror = function() {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'champion-option-placeholder';
+                    placeholder.textContent = champion.charAt(0).toUpperCase();
+                    this.parentNode.replaceChild(placeholder, this);
+                };
+                
+                const name = document.createElement('span');
+                name.textContent = champion;
+                
+                option.appendChild(avatar);
+                option.appendChild(name);
+                
+                option.addEventListener('click', () => {
+                    document.getElementById('championInput').value = champion;
+                    dropdown.classList.remove('show');
+                    highlightedIndex = -1;
+                });
+                
+                dropdown.appendChild(option);
+            });
+            
+            dropdown.classList.add('show');
+            highlightedIndex = -1;
+        }
+        
+        function hideChampionDropdown() {
+            document.getElementById('championDropdown').classList.remove('show');
+            highlightedIndex = -1;
+        }
+        
+        function highlightOption(index) {
+            const options = document.querySelectorAll('.champion-option');
+            options.forEach(opt => opt.classList.remove('highlighted'));
+            
+            if (index >= 0 && index < options.length) {
+                options[index].classList.add('highlighted');
+                highlightedIndex = index;
+            }
+        }
+        
+        function selectHighlightedOption() {
+            if (highlightedIndex >= 0 && highlightedIndex < filteredChampions.length) {
+                const champion = filteredChampions[highlightedIndex];
+                document.getElementById('championInput').value = champion;
+                hideChampionDropdown();
+                return true;
+            }
+            return false;
+        }
+        
+        // Event listenery dla color pickerów
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('bgColor1').addEventListener('input', updateBackground);
+            document.getElementById('bgColor2').addEventListener('input', updateBackground);
+            loadSavedStyles();
+            
+            // Autocomplete dla championów
+            const championInput = document.getElementById('championInput');
+            
+            championInput.addEventListener('input', function(e) {
+                showChampionDropdown(e.target.value);
+            });
+            
+            championInput.addEventListener('keydown', function(e) {
+                const dropdown = document.getElementById('championDropdown');
+                if (!dropdown.classList.contains('show')) return;
+                
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        highlightedIndex = Math.min(highlightedIndex + 1, filteredChampions.length - 1);
+                        highlightOption(highlightedIndex);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        highlightedIndex = Math.max(highlightedIndex - 1, 0);
+                        highlightOption(highlightedIndex);
+                        break;
+                    case 'Enter':
+                        if (selectHighlightedOption()) {
+                            e.preventDefault();
+                        }
+                        break;
+                    case 'Escape':
+                        hideChampionDropdown();
+                        break;
+                }
+            });
+            
+            // Ukryj dropdown przy kliknięciu poza nim
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.champion-autocomplete')) {
+                    hideChampionDropdown();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
