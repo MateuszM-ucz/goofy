@@ -14,6 +14,7 @@
         :root {
             --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --card-radius: 0px;
+            --bg-overlay-opacity: 0.3;
         }
 
         body {
@@ -21,6 +22,28 @@
             background: var(--primary-bg);
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, var(--bg-overlay-opacity));
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        body.has-image-bg::before {
+            opacity: 1;
         }
 
         .container {
@@ -519,6 +542,60 @@
             font-size: 10px;
         }
         
+        .player-management {
+            background: white;
+            padding: 20px;
+            border-radius: var(--card-radius);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .player-management h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .player-management-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .player-management-form input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            min-width: 200px;
+            flex: 1;
+        }
+        
+        .player-management-form button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .player-management-form button:hover {
+            background: #5a67d8;
+        }
+        
+        .player-remove-btn {
+            background: #f56565 !important;
+            font-size: 12px !important;
+            padding: 4px 8px !important;
+            margin-left: 8px !important;
+        }
+        
+        .player-remove-btn:hover {
+            background: #e53e3e !important;
+        }
+        
         @media (max-width: 768px) {
             .add-ban-form {
                 flex-direction: column;
@@ -571,6 +648,50 @@
                     <button class="shape-btn" onclick="setShape('10px', this)">Zaokrąglone</button>
                 </div>
             </div>
+            
+            <div class="style-options" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <h4 style="width: 100%; margin-bottom: 15px; color: #2d3748;">🖼️ Typ tła:</h4>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="radio" name="bgType" value="gradient" onchange="switchBackgroundType('gradient')">
+                        <span>Gradient</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="radio" name="bgType" value="image" checked onchange="switchBackgroundType('image')">
+                        <span>Obraz</span>
+                    </label>
+                </div>
+                
+                <div id="imageControls" style="display: none;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                        <input type="file" id="bgImageInput" accept="image/*,.avif" style="padding: 8px; border: 2px solid #ddd; border-radius: 5px; flex: 1; min-width: 200px;">
+                        <button onclick="loadDefaultImage()" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Użyj domyślnego obrazu</button>
+                    </div>
+                    
+                    <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 15px;">
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <label style="font-size: 14px;">Przyciemnienie:</label>
+                            <input type="range" id="overlayOpacity" min="0" max="80" value="30" oninput="updateOverlayOpacity(this.value)" style="width: 150px;">
+                            <span id="overlayValue" style="font-size: 12px; color: #666;">30%</span>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <label style="font-size: 14px;">Rozmycie:</label>
+                            <input type="range" id="bgBlur" min="0" max="20" value="0" oninput="updateBackgroundBlur(this.value)" style="width: 150px;">
+                            <span id="blurValue" style="font-size: 12px; color: #666;">0px</span>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <label style="font-size: 14px;">Dopasowanie:</label>
+                            <select id="bgSize" onchange="updateBackgroundSize(this.value)" style="padding: 5px; border: 2px solid #ddd; border-radius: 5px;">
+                                <option value="cover">Wypełnij</option>
+                                <option value="contain">Dopasuj</option>
+                                <option value="100% 100%">Rozciągnij</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="controls">
@@ -595,6 +716,14 @@
                 </div>
                 <button onclick="addBan()">Dodaj bana</button>
                 <button onclick="refreshData()" class="refresh-btn">Odśwież dane</button>
+            </div>
+            
+            <div class="player-management">
+                <h3>👥 Zarządzanie graczami</h3>
+                <div class="player-management-form">
+                    <input type="text" id="newPlayerInput" placeholder="Nazwa nowego gracza...">
+                    <button onclick="addPlayer()">Dodaj gracza</button>
+                </div>
             </div>
         </div>
         
@@ -766,8 +895,18 @@
                 const playerNameText = document.createElement('span');
                 playerNameText.textContent = player;
                 
+                const playerRemoveBtn = document.createElement('button');
+                playerRemoveBtn.className = 'player-remove-btn';
+                playerRemoveBtn.textContent = '✕';
+                playerRemoveBtn.title = `Usuń gracza ${player}`;
+                playerRemoveBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removePlayer(player);
+                };
+                
                 playerName.appendChild(playerAvatar);
                 playerName.appendChild(playerNameText);
+                playerName.appendChild(playerRemoveBtn);
                 
                 const championList = document.createElement('div');
                 championList.className = 'champion-list';
@@ -1000,15 +1139,95 @@
         }
         
         // Funkcje do customizacji wyglądu
+        let currentBgType = 'image';
+        let currentImageUrl = null;
+        let backgroundBlur = 0;
+        
         function updateBackground() {
-            const color1 = document.getElementById('bgColor1').value;
-            const color2 = document.getElementById('bgColor2').value;
-            const gradient = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
-            document.documentElement.style.setProperty('--primary-bg', gradient);
+            if (currentBgType === 'gradient') {
+                const color1 = document.getElementById('bgColor1').value;
+                const color2 = document.getElementById('bgColor2').value;
+                const gradient = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+                document.documentElement.style.setProperty('--primary-bg', gradient);
+                document.body.style.backgroundImage = '';
+                document.body.classList.remove('has-image-bg');
+                
+                // Zapisz w localStorage
+                localStorage.setItem('bgColor1', color1);
+                localStorage.setItem('bgColor2', color2);
+            }
+        }
+        
+        function switchBackgroundType(type) {
+            currentBgType = type;
+            const imageControls = document.getElementById('imageControls');
+            const colorOptions = document.querySelectorAll('.color-option, .preset-colors');
             
-            // Zapisz w localStorage
-            localStorage.setItem('bgColor1', color1);
-            localStorage.setItem('bgColor2', color2);
+            if (type === 'image') {
+                imageControls.style.display = 'block';
+                colorOptions.forEach(el => el.style.display = 'none');
+                
+                if (currentImageUrl) {
+                    applyImageBackground(currentImageUrl);
+                } else {
+                    // Załaduj domyślny obraz przy pierwszym przełączeniu
+                    loadDefaultImage();
+                }
+            } else {
+                imageControls.style.display = 'none';
+                colorOptions.forEach(el => el.style.display = 'flex');
+                document.body.style.backgroundImage = '';
+                document.body.style.filter = '';
+                document.body.classList.remove('has-image-bg');
+                updateBackground();
+            }
+            
+            localStorage.setItem('bgType', type);
+        }
+        
+        function applyImageBackground(url) {
+            currentImageUrl = url;
+            document.body.style.backgroundImage = `url('${url}')`;
+            document.body.classList.add('has-image-bg');
+            
+            // Zastosuj rozmycie jeśli ustawione
+            if (backgroundBlur > 0) {
+                document.body.style.backdropFilter = `blur(${backgroundBlur}px)`;
+            }
+            
+            localStorage.setItem('bgImageUrl', url);
+        }
+        
+        function loadDefaultImage() {
+            const defaultImagePath = '/mnt/d/Prywatne/goofy/lol/ffe8f50201af51a0956875d2aeeb9e662eb0b228-3840x2160.avif';
+            // Dla przeglądarki używamy ścieżki względnej
+            const relativePath = 'ffe8f50201af51a0956875d2aeeb9e662eb0b228-3840x2160.avif';
+            applyImageBackground(relativePath);
+        }
+        
+        function updateOverlayOpacity(value) {
+            document.documentElement.style.setProperty('--bg-overlay-opacity', value / 100);
+            document.getElementById('overlayValue').textContent = value + '%';
+            localStorage.setItem('overlayOpacity', value);
+        }
+        
+        function updateBackgroundBlur(value) {
+            backgroundBlur = value;
+            const container = document.querySelector('.container');
+            if (value > 0) {
+                container.style.backdropFilter = `blur(${value}px)`;
+                container.style.background = 'rgba(255, 255, 255, 0.1)';
+            } else {
+                container.style.backdropFilter = '';
+                container.style.background = '';
+            }
+            document.getElementById('blurValue').textContent = value + 'px';
+            localStorage.setItem('bgBlur', value);
+        }
+        
+        function updateBackgroundSize(value) {
+            document.body.style.backgroundSize = value;
+            localStorage.setItem('bgSize', value);
         }
         
         function setPreset(color1, color2, element) {
@@ -1052,13 +1271,49 @@
             const savedColor1 = localStorage.getItem('bgColor1');
             const savedColor2 = localStorage.getItem('bgColor2');
             const savedRadius = localStorage.getItem('cardRadius');
+            const savedBgType = localStorage.getItem('bgType');
+            const savedImageUrl = localStorage.getItem('bgImageUrl');
+            const savedOverlay = localStorage.getItem('overlayOpacity');
+            const savedBlur = localStorage.getItem('bgBlur');
+            const savedBgSize = localStorage.getItem('bgSize');
             
             if (savedColor1) document.getElementById('bgColor1').value = savedColor1;
             if (savedColor2) document.getElementById('bgColor2').value = savedColor2;
             if (savedRadius) document.documentElement.style.setProperty('--card-radius', savedRadius);
             
-            if (savedColor1 || savedColor2) {
-                updateBackground();
+            if (savedOverlay) {
+                document.getElementById('overlayOpacity').value = savedOverlay;
+                updateOverlayOpacity(savedOverlay);
+            }
+            
+            if (savedBlur) {
+                document.getElementById('bgBlur').value = savedBlur;
+                updateBackgroundBlur(savedBlur);
+            }
+            
+            if (savedBgSize) {
+                document.getElementById('bgSize').value = savedBgSize;
+                document.body.style.backgroundSize = savedBgSize;
+            }
+            
+            // Domyślnie ustaw obraz jako tło, chyba że użytkownik wcześniej wybrał gradient
+            if (savedBgType === 'gradient') {
+                document.querySelector('input[name="bgType"][value="gradient"]').checked = true;
+                currentBgType = 'gradient';
+                if (savedColor1 || savedColor2) {
+                    updateBackground();
+                }
+            } else {
+                // Domyślnie obraz
+                document.querySelector('input[name="bgType"][value="image"]').checked = true;
+                currentBgType = 'image';
+                if (savedImageUrl) {
+                    currentImageUrl = savedImageUrl;
+                    switchBackgroundType('image');
+                } else {
+                    // Jeśli nie ma zapisanego obrazu, załaduj domyślny
+                    switchBackgroundType('image');
+                }
             }
             
             // Ustaw aktywny kształt
@@ -1175,6 +1430,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('bgColor1').addEventListener('input', updateBackground);
             document.getElementById('bgColor2').addEventListener('input', updateBackground);
+            
+            // Obsługa uploadu obrazu
+            document.getElementById('bgImageInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        applyImageBackground(event.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
             loadSavedStyles();
             
             // Autocomplete dla championów
@@ -1216,7 +1484,74 @@
                     hideChampionDropdown();
                 }
             });
+            
+            // Event listener dla Enter w polu dodawania gracza
+            document.getElementById('newPlayerInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addPlayer();
+                }
+            });
         });
+        
+        // Funkcje zarządzania graczami
+        async function addPlayer() {
+            const newPlayerName = document.getElementById('newPlayerInput').value.trim();
+            
+            if (!newPlayerName) {
+                showError('Wpisz nazwę gracza');
+                return;
+            }
+            
+            if (bansData.hasOwnProperty(newPlayerName)) {
+                showError('Gracz o tej nazwie już istnieje');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addPlayer',
+                        player: newPlayerName
+                    })
+                });
+                
+                showSuccess(`Gracz "${newPlayerName}" został dodany`);
+                document.getElementById('newPlayerInput').value = '';
+                setTimeout(() => loadData(), 500);
+            } catch (error) {
+                showError('Błąd dodawania gracza: ' + error.message);
+            }
+        }
+        
+        async function removePlayer(playerName) {
+            if (!confirm(`Czy na pewno usunąć gracza "${playerName}"?\nTo usunie także wszystkie jego bany!`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'removePlayer',
+                        player: playerName
+                    })
+                });
+                
+                showSuccess(`Gracz "${playerName}" został usunięty`);
+                setTimeout(() => loadData(), 500);
+            } catch (error) {
+                showError('Błąd usuwania gracza: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>
